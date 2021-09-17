@@ -473,7 +473,7 @@ class DLASeg(nn.Module):
         x = self.dla_up(x)
 
         y = []
-        EXPORT_ONNX = True
+        EXPORT_ONNX = False
         for i in range(self.last_level - self.first_level):
             y.append(x[i].clone())
         self.ida_up(y, 0, len(y))

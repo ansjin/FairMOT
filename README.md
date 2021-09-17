@@ -50,12 +50,36 @@ pip install cython
 pip install -r requirements.txt
 ```
 * We use [DCNv2_pytorch_1.7](https://github.com/ifzhang/DCNv2/tree/pytorch_1.7) in our backbone network (pytorch_1.7 branch). Previous versions can be found in [DCNv2](https://github.com/CharlesShang/DCNv2).
+It is already added into the directory with some modifications, therefore no need to clone it.
 ```
 git clone -b pytorch_1.7 https://github.com/ifzhang/DCNv2.git
-cd DCNv2
-./make.sh
+cd src/lib/models/networks/DCNv2
+sh make.sh
 ```
 * In order to run the code for demos, you also need to install [ffmpeg](https://www.ffmpeg.org/).
+
+## For exporting model to ONNX
+1. In file ```FairMOT/src/lib/models/networks/pose_dla_dcn.py``` on line `476` set `EXPORT_ONNX = True`.
+2. Skip onnx check for the operation in file  ```/home/ubuntu/anaconda3/envs/FairMOT/lib/python3.7/site-packages/torch/onnx/utils.py``` where ```FairMOT``` is the environment (line 662)
+
+```
+#_check_onnx_proto(proto)
+```
+
+then it should look like this: 
+
+```
+if enable_onnx_checker and \
+                operator_export_type is OperatorExportTypes.ONNX and \
+                    not val_use_external_data_format:
+                # Only run checker if enabled and we are using ONNX export type and
+                # large model format export in not enabled.
+                #_check_onnx_proto(proto)
+                pass
+```
+
+3. Now go to ```FairMOT/src/``` and run python ```export_onnx.py```
+
 
 ## Data preparation
 
