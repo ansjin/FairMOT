@@ -11,6 +11,7 @@ from os.path import join
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.onnx import export
 import torch.utils.model_zoo as model_zoo
 
 from dcn_v2 import DCN
@@ -472,14 +473,34 @@ class DLASeg(nn.Module):
         x = self.dla_up(x)
 
         y = []
+        EXPORT_ONNX = True
         for i in range(self.last_level - self.first_level):
             y.append(x[i].clone())
         self.ida_up(y, 0, len(y))
 
+        ###############################################  Modified ############################################################
         z = {}
+        outputs = []
         for head in self.heads:
             z[head] = self.__getattr__(head)(y[-1])
-        return [z]
+            outputs.append(z[head])
+
+        if EXPORT_ONNX is True:
+            hm = z["hm"]
+            wh = z["wh"]
+            reg = z["reg"]
+            hm = F.sigmoid(hm)
+            hm_pool = F.max_pool2d(hm, kernel_size=3, stride=1, padding=1)
+
+
+            id_feature = z['id']
+            id_feature = F.normalize(id_feature, dim=1)
+            id_feature = id_feature.permute(0, 2, 3, 1).contiguous() #switch id dim
+            return [hm, wh, reg, hm_pool, id_feature]
+        else:
+            return [z]
+        ###############################################  ---------- ############################################################
+    
     
 
 def get_pose_net(num_layers, heads, head_conv=256, down_ratio=4):
