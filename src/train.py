@@ -36,7 +36,8 @@ def main(opt):
 
     logger = Logger(opt)
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
+    if opt.gpus[0] >= 0: 
+        os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
     opt.device = torch.device('cuda' if opt.gpus[0] >= 0 else 'cpu')
 
     print('Creating model...')
@@ -93,6 +94,8 @@ def main(opt):
 
 
 if __name__ == '__main__':
-    torch.cuda.set_device(0)
+    #torch.cuda.set_device(0)
     opt = opts().parse()
+    if opt.gpus[0] >= 0:
+        torch.cuda.set_device(0)
     main(opt)

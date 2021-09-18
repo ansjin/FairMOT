@@ -24,6 +24,9 @@ import torchvision.models as models
 import torch
 from ptflops import get_model_complexity_info
 
+opt = opts().parse()
+    
+
 model = net.get_pose_net(num_layers=34, heads={'hm': 1, 'wh': 4, 'reg': 2, 'id':128})
 
 checkpoint = torch.load(r"../models/fairmot_dla34.pth", map_location="cpu")
@@ -34,16 +37,27 @@ for key, op in checkpoint.items():
 
 model.load_state_dict(change)
 model.eval()
-model.cuda()
+if opt.gpus[0] >= 0: 
+    model.cuda()
 
-input = torch.zeros((1, 3, 608, 1088)).cuda()
-[hm, wh, reg, hm_pool, id_feature] = model(input)
-onnx.export(model, (input), "../models/fairmot_dla34_1088x608.onnx", output_names=["hm", "wh", "reg", "hm_pool", "id"], verbose=True)
+    input = torch.zeros((1, 3, 608, 1088)).cuda()
+    [hm, wh, reg, hm_pool, id_feature] = model(input)
+    onnx.export(model, (input), "../models/fairmot_dla34_1088x608.onnx", output_names=["hm", "wh", "reg", "hm_pool", "id"], verbose=True)
 
-with torch.cuda.device(0):
-  macs, params = get_model_complexity_info(model, (3, 608, 1088), as_strings=True,
-                                           print_per_layer_stat=True, verbose=True)
+    with torch.cuda.device(0):
+        macs, params = get_model_complexity_info(model, (3, 608, 1088), as_strings=True,
+                                                print_per_layer_stat=True, verbose=True)
 
-  print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-  print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+else:
+    input = torch.zeros((1, 3, 608, 1088)).cuda()
+    [hm, wh, reg, hm_pool, id_feature] = model(input)
+    onnx.export(model, (input), "../models/fairmot_dla34_1088x608.onnx", output_names=["hm", "wh", "reg", "hm_pool", "id"], verbose=True)
+
+    macs, params = get_model_complexity_info(model, (3, 608, 1088), as_strings=True,
+                                            print_per_layer_stat=True, verbose=True)
+
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 

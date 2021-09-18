@@ -1,5 +1,5 @@
 {
-    "root":"/home/ubuntu/fairmot_ansjin/FairMOT/datasets",
+    "root":"/data/FairMOT/datasets",
     "train":
     {
         "mot20":"./data/mot20.train"
